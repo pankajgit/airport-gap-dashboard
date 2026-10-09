@@ -6,31 +6,41 @@ import type { Airport } from "../types/airport";
 
 interface UseAirportsResult {
   airports: Airport[];
+  page: number;
+  totalPages: number;
   isLoading: boolean;
   error: string | null;
-  refetch: () => Promise<void>;
+  nextPage: number | null;
+  previousPage: number | null;
+  goToPage: (page: number) => void;
+  refetch: () => void;
 }
 
 export const useAirports = (): UseAirportsResult => {
   const [airports, setAirports] = useState<Airport[]>([]);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [nextPage, setNextPage] = useState<number | null>(null);
+  const [previousPage, setPreviousPage] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
 
-  const fetchAirports = useCallback(async () => {
-    try {
+  const goToPage = useCallback(
+    (newPage: number) => {
+      if (newPage < 1 || newPage > totalPages || newPage === page) {
+        return;
+      }
+
       setIsLoading(true);
-      setError(null);
+      setPage(newPage);
+    },
+    [page, totalPages],
+  );
 
-      const data = await getAirports();
-
-      setAirports(data);
-    } catch (error) {
-      console.error(error);
-
-      setError("Unable to load airports. Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
+  const refetch = useCallback(() => {
+    setIsLoading(true);
+    setReloadKey((current) => current + 1);
   }, []);
 
   useEffect(() => {
@@ -38,12 +48,15 @@ export const useAirports = (): UseAirportsResult => {
 
     const loadAirports = async () => {
       try {
-        const data = await getAirports();
+        const result = await getAirports(page);
 
-        if (!ignore) {
-          setAirports(data);
-          setError(null);
-        }
+        if (ignore) return;
+
+        setAirports(result.airports);
+        setTotalPages(result.totalPages);
+        setNextPage(result.nextPage);
+        setPreviousPage(result.previousPage);
+        setError(null);
       } catch (error) {
         console.error(error);
 
@@ -62,12 +75,17 @@ export const useAirports = (): UseAirportsResult => {
     return () => {
       ignore = true;
     };
-  }, []);
+  }, [page, reloadKey]);
 
   return {
     airports,
+    page,
+    totalPages,
     isLoading,
     error,
-    refetch: fetchAirports,
+    nextPage,
+    previousPage,
+    goToPage,
+    refetch,
   };
 };

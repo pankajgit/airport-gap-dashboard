@@ -40,7 +40,17 @@ const airportColumns = [
 ];
 
 const AirportsPage = () => {
-  const { airports, isLoading, error, refetch } = useAirports();
+  const {
+    airports,
+    page,
+    totalPages,
+    isLoading,
+    error,
+    nextPage,
+    previousPage,
+    goToPage,
+    refetch,
+  } = useAirports();
   console.log(airports);
   const [search, setSearch] = useState("");
 
@@ -74,7 +84,7 @@ const AirportsPage = () => {
 
         <button
           type="button"
-          onClick={() => void refetch()}
+          onClick={refetch}
           disabled={isLoading}
           className="rounded-lg bg-green-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-60"
         >
@@ -144,6 +154,40 @@ const AirportsPage = () => {
                 rowKey={(rowKey) => rowKey.id}
               />
             }
+            <div className="flex flex-col gap-3 border-t border-gray-200 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-sm text-gray-600">
+                Page <span className="font-semibold">{page}</span> of{" "}
+                <span className="font-semibold">{totalPages}</span>
+              </p>
+
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (previousPage !== null) {
+                      goToPage(previousPage);
+                    }
+                  }}
+                  disabled={isLoading || previousPage === null}
+                  className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  Previous
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (nextPage !== null) {
+                      goToPage(nextPage);
+                    }
+                  }}
+                  disabled={isLoading || nextPage === null}
+                  className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
