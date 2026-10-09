@@ -70,3 +70,23 @@ export const getAirports = async (page = 1): Promise<AirportPage> => {
     previousPage: getPageNumber(result.links.prev),
   };
 };
+
+export const getAirportById = async (id: string): Promise<Airport> => {
+  const response = await axiosClient.get<{ data: AirportApiItem }>(
+    `/airports/${encodeURIComponent(id)}`,
+  );
+  const airport = response.data.data;
+
+  return {
+    id: airport.id,
+    name: airport.attributes.name,
+    city: airport.attributes.city,
+    country: airport.attributes.country,
+    iata: airport.attributes.iata,
+    icao: airport.attributes.icao,
+    latitude: Number(airport.attributes.latitude),
+    longitude: Number(airport.attributes.longitude),
+    altitude: airport.attributes.altitude,
+    timezone: airport.attributes.timezone,
+  };
+};

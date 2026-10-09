@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import { useAirports } from "../../hooks/useAirports";
 import type { Airport } from "../../types/airport";
 import DataTable from "../../components/common/DataTable";
+import { Link } from "react-router";
 
 const airportColumns = [
   {
@@ -10,7 +11,12 @@ const airportColumns = [
     header: "Airport",
     render: (airport: Airport) => (
       <div>
-        <p className="font-medium text-gray-900">{airport.name}</p>
+        <Link
+          to={`/airports/${encodeURIComponent(airport.id)}`}
+          className="font-medium text-green-700 hover:underline"
+        >
+          {airport.name}
+        </Link>
 
         <p className="text-xs text-gray-500">{airport.id}</p>
       </div>
@@ -40,6 +46,9 @@ const airportColumns = [
 ];
 
 const AirportsPage = () => {
+  type SortField = "name" | "city" | "country";
+  type SortDirection = "asc" | "desc";
+
   const {
     airports,
     page,
@@ -54,21 +63,28 @@ const AirportsPage = () => {
   console.log(airports);
   const [search, setSearch] = useState("");
 
+  const [sortField, setSortField] = useState<SortField>("name");
+  const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
+
   const filteredAirports = useMemo(() => {
-    const searchValue = search.trim().toLowerCase();
+    const query = search.trim().toLowerCase();
 
-    if (!searchValue) {
-      return airports;
-    }
+    return airports
+      .filter((airport) => {
+        return (
+          airport.name.toLowerCase().includes(query) ||
+          airport.city.toLowerCase().includes(query) ||
+          airport.country.toLowerCase().includes(query) ||
+          airport.iata?.toLowerCase().includes(query) ||
+          airport.icao?.toLowerCase().includes(query)
+        );
+      })
+      .sort((a, b) => {
+        const comparison = a[sortField].localeCompare(b[sortField]);
 
-    return airports.filter((airport) => {
-      return (
-        airport.name.toLowerCase().includes(searchValue) ||
-        airport.iata?.toLowerCase().includes(searchValue) ||
-        airport.city.toLowerCase().includes(searchValue)
-      );
-    });
-  }, [airports, search]);
+        return sortDirection === "asc" ? comparison : -comparison;
+      });
+  }, [airports, search, sortField, sortDirection]);
 
   return (
     <div className="space-y-6">
@@ -93,22 +109,58 @@ const AirportsPage = () => {
       </div>
 
       {/* Search */}
-      <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-        <label
-          htmlFor="airport-search"
-          className="mb-2 block text-sm font-medium text-gray-700"
-        >
-          Search airports
-        </label>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div>
+          <label
+            htmlFor="airport-search"
+            className="mb-2 block text-sm font-medium text-gray-700"
+          >
+            Search airports
+          </label>
 
-        <input
-          id="airport-search"
-          type="search"
-          value={search}
-          onChange={(event) => setSearch(event.target.value)}
-          placeholder="Search by airport, IATA code or city..."
-          className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm outline-none focus:border-green-500 focus:ring-2 focus:ring-green-100"
-        />
+          <input
+            id="airport-search"
+            type="search"
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder="Name, city, IATA or ICAO..."
+            className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm outline-none focus:border-green-500 focus:ring-2 focus:ring-green-100"
+          />
+        </div>
+
+        <div>
+          <label
+            htmlFor="sort-field"
+            className="mb-2 block text-sm font-medium text-gray-700"
+          >
+            Sort by
+          </label>
+
+          <select
+            id="sort-field"
+            value={sortField}
+            onChange={(event) => setSortField(event.target.value as SortField)}
+            className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm"
+          >
+            <option value="name">Airport name</option>
+            <option value="city">City</option>
+            <option value="country">Country</option>
+          </select>
+        </div>
+
+        <div className="sm:col-span-2">
+          <button
+            type="button"
+            onClick={() =>
+              setSortDirection((current) =>
+                current === "asc" ? "desc" : "asc",
+              )
+            }
+            className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+          >
+            {sortDirection === "asc" ? "Ascending ↑" : "Descending ↓"}
+          </button>
+        </div>
       </div>
 
       {/* Error */}
