@@ -4,12 +4,39 @@ import { Link, useParams } from "react-router";
 import { getAirportById } from "../../services/airport/airportService";
 import type { Airport } from "../../types/airport";
 
+import { addFavorite } from "../../services/airport/favoriteService";
+
 const AirportDetailsPage = () => {
   const { id } = useParams<{ id: string }>();
 
   const [airport, setAirport] = useState<Airport | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const [note, setNote] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveMessage, setSaveMessage] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
+
+  const handleAddFavorite = async () => {
+    if (!airport) return;
+
+    try {
+      setIsSaving(true);
+      setSaveMessage(null);
+      setSaveError(null);
+
+      await addFavorite(airport.id, note);
+
+      setSaveMessage("Airport added to favorites.");
+      setNote("");
+    } catch (error) {
+      console.error(error);
+      setSaveError("Unable to add this airport. It may already be a favorite.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   useEffect(() => {
     let ignore = false;
@@ -113,6 +140,48 @@ const AirportDetailsPage = () => {
             </p>
           </div>
         ))}
+      </div>
+
+      <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+        <h2 className="font-semibold text-gray-900">Save to Favorites</h2>
+
+        <label
+          htmlFor="favorite-note"
+          className="mb-2 mt-4 block text-sm font-medium text-gray-700"
+        >
+          Note (optional)
+        </label>
+
+        <input
+          id="favorite-note"
+          type="text"
+          value={note}
+          onChange={(event) => setNote(event.target.value)}
+          maxLength={500}
+          placeholder="e.g. My preferred airport"
+          className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm"
+        />
+
+        <button
+          type="button"
+          onClick={() => void handleAddFavorite()}
+          disabled={isSaving}
+          className="mt-4 rounded-lg bg-green-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-green-700 disabled:opacity-50"
+        >
+          {isSaving ? "Saving..." : "Add to Favorites"}
+        </button>
+
+        {saveMessage && (
+          <p role="status" className="mt-3 text-sm text-green-700">
+            {saveMessage}
+          </p>
+        )}
+
+        {saveError && (
+          <p role="alert" className="mt-3 text-sm text-red-600">
+            {saveError}
+          </p>
+        )}
       </div>
     </div>
   );

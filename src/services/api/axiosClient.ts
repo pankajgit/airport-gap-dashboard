@@ -1,26 +1,26 @@
-import axios from 'axios'
+import axios from "axios";
 
 const axiosClient = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
   headers: {
-    'Content-Type': 'application/json',
-    Accept: 'application/json',
+    "Content-Type": "application/json",
+    Accept: "application/json",
   },
-})
+});
 
 axiosClient.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('airport_gap_token')
+    const token = localStorage.getItem("airport_gap_token");
 
     if (token) {
-      config.headers.Authorization = `Bearer ${token}`
+      config.headers.Authorization = `Bearer token=${token}`;
     }
 
-    return config
+    return config;
   },
   (error) => {
-    return Promise.reject(error)
+    return Promise.reject(error);
   },
-)
+);
 
-export default axiosClient
+export default axiosClient;

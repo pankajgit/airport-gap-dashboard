@@ -1,22 +1,22 @@
 export interface LoginCredentials {
-  email: string
-  password: string
+  email: string;
+  password: string;
 }
 
 export interface LoginResponse {
-  token: string
+  token: string;
 }
 
 export interface AuthState {
-  token: string | null
-  isAuthenticated: boolean
+  token: string | null;
+  isAuthenticated: boolean;
 }
 
 export type AuthAction =
   | {
-      type: 'LOGIN'
-      payload: string
+      type: "LOGIN";
+      payload: string;
     }
   | {
-      type: 'LOGOUT'
-    }
+      type: "LOGOUT";
+    };
